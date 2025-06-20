@@ -100,7 +100,6 @@ int main() {
             sum += i;
         }
 
-        // Kirim hasil ke child
         write(fd[1], &sum, sizeof(sum));
         close(fd[1]); 
 
