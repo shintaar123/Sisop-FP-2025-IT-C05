@@ -93,7 +93,6 @@ int main() {
     }
 
     if (pid > 0) {
-        // Parent process
         close(fd[0]); 
 
         int sum = 0;
