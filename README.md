@@ -211,7 +211,10 @@ Penjelasan:
 
 
 **Video Menjalankan Program**
-...
+```
+https://github.com/user-attachments/assets/4ca86ce6-1f18-4974-a16f-176505909320
+```
+- Jika ingin langsung jalankan, geser ke menit 01:37
 
 ## Daftar Pustaka
 
