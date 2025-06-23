@@ -123,6 +123,92 @@ Contoh output :
 Masukkan angka maksimal: 12  
 Child: Jumlah dari 1 sampai 12 adalah 78
 ```
+Penjelasan kode
+```
+int main() {
+    int fd[2]; 
+    pid_t pid;
+    int n;
+
+```
+Penjelasan:
+- fd[2]: Array untuk menyimpan file descriptor pipe:
+- fd[0]: ujung baca pipe.
+- fd[1]: ujung tulis pipe.
+- pid_t pid: Variabel untuk menyimpan Process ID hasil fork().
+- int n: Variabel untuk menyimpan angka maksimal yang akan dihitung jumlahnya.
+
+```
+printf("Masukkan angka maksimal: ");
+scanf("%d", &n);
+```
+Penjelasan:
+- Program meminta user memasukkan angka maksimal (n) sebagai batas atas perhitungan jumlah bilangan.
+
+```
+if (pipe(fd) == -1) {
+perror("Pipe gagal");
+return 1;
+}
+```
+Penjelasan:
+- pipe(fd) membuat saluran komunikasi antar proses (pipe).
+- Jika pipe() gagal, program menampilkan pesan error menggunakan perror() dan keluar dengan return value 1.
+
+```
+pid = fork();
+if (pid < 0) {
+perror("Fork gagal");
+return 1;
+}
+
+```
+Penjelasan:
+- fork() digunakan untuk membuat child process.
+- Return value:
+   - kurang dari 0: Gagal membuat child.
+   - 0: Proses child.
+   - lebih dari 0: Proses parent.
+- Jika gagal, tampilkan pesan error dan keluar.
+
+```
+if (pid > 0) {
+close(fd[0]); 
+
+int sum = 0;
+for (int i = 1; i <= n; i++) {
+sum += i;
+}
+
+write(fd[1], &sum, sizeof(sum));
+close(fd[1]); 
+
+wait(NULL); 
+```
+Penjelasan:
+- Parent menutup ujung baca pipe (fd[0]) karena hanya akan menulis.
+- Melakukan perhitungan jumlah bilangan dari 1 sampai n.
+- Mengirim hasil perhitungan ke child melalui pipe menggunakan write().
+- Menutup ujung tulis pipe (fd[1]) setelah selesai.
+- Memanggil wait(NULL) agar parent menunggu child selesai.
+
+```
+} else {
+close(fd[1]); 
+
+int result;
+read(fd[0], &result, sizeof(result));
+printf("Child: Jumlah dari 1 sampai %d adalah %d\n", n, result);
+
+close(fd[0]); 
+}
+```
+Penjelasan:
+- Child menutup ujung tulis pipe (fd[1]) karena hanya akan membaca.
+- Membaca hasil perhitungan dari parent melalui pipe ke variabel result.
+- Menampilkan hasil ke layar.
+- Menutup ujung baca pipe (fd[0]) setelah selesai.
+
 
 **Video Menjalankan Program**
 ...
