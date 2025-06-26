@@ -47,21 +47,24 @@ Poin Soal A : Hitung Penjumlahan 1 hingga n Menggunakan Pipe dan Fork
 
 **Teori**
 
-Inter Process Communication (IPC) adalah metode yang memungkinkan dua atau lebih proses untuk bertukar data. Salah satu bentuk IPC yang umum dalam sistem operasi UNIX/Linux adalah pipe.
+Inter Process Communication (IPC) adalah mekanisme dalam sistem operasi yang memungkinkan pertukaran data antar proses yang berjalan secara konkuren. Salah satu bentuk IPC paling umum dalam sistem UNIX/Linux adalah pipe, yaitu saluran komunikasi unidirectional yang digunakan antara proses, khususnya antara parent dan child setelah pemanggilan fork().
 
-Fungsi pipe(int fd[2]) membuat dua file descriptor :
-- fd[0] untuk read (membaca data),
-- fd[1] untuk write (menulis data).
+Fungsi pipe(int fd[2]) akan menghasilkan dua file descriptor :
+- fd[0] digunakan untuk membaca data (read),
+- fd[1] digunakan untuk menulis data (write).
+Setelah pipe() dipanggil, sistem operasi mengalokasikan buffer memori kernel yang dapat digunakan untuk menyimpan data secara sementara hingga dibaca oleh proses penerima. Jika buffer penuh, proses penulis akan diblokir hingga data dibaca; sebaliknya, jika buffer kosong, proses pembaca akan diblokir hingga ada data masuk (Krishnaveni & Durairaj, 2016).
 
-Setelah pipe() dipanggil, sistem operasi membuat buffer memori yang dapat diakses melalui kedua file descriptor tersebut. Menurut dokumentasi man7.org (pipe(2)), pipe bersifat unidirectional, artinya data hanya bisa mengalir satu arah — dari penulis ke pembaca, dan setiap proses harus menutup sisi pipe yang tidak digunakannya untuk menghindari kebuntuan (man7.org, n.d.).
+Menurut Venkataraman & Jagadeesha dari University of Wisconsin–Madison, pipe disebut sebagai unidirectional communication device karena hanya memungkinkan transfer data dari satu arah, dari penulis ke pembaca. Pipe sangat cocok untuk komunikasi antar parent-child karena sinkronisasi dan efisiensinya. Mereka juga menekankan bahwa pipe, meskipun tidak secepat shared memory, memiliki performa yang sangat kompetitif dan implementasi yang sederhana dibandingkan model IPC lainnya seperti socket atau message queue (Venkataraman & Jagadeesha, ≈2013).
 
-Dalam program ini :
-- Proses utama membuat child menggunakan fork().
-- Parent menghitung jumlah dari 1 sampai n, lalu mengirimkan hasilnya ke child lewat write(fd[1], ...).
-- Child menerima data melalui read(fd[0], ...), lalu menampilkannya.
+Dalam praktiknya, komunikasi melalui pipe terjadi sebagai berikut:
+ - Proses utama (parent) membuat pipe dengan pipe(fd), lalu menciptakan proses anak menggunakan fork().
+ - Parent menutup sisi pembaca fd[0], melakukan perhitungan (misalnya, menjumlah angka dari 1 hingga n), lalu mengirim hasilnya ke child menggunakan write(fd[1], &hasil, sizeof(hasil)).
+ - Child menutup sisi penulis fd[1], membaca data dari fd[0] menggunakan read(), lalu menampilkannya ke layar.
+ - Proses parent menggunakan wait() untuk menunggu proses anak selesai, agar tidak terjadi zombie process.
+   
+Menurut Silberschatz et al. (2018) dalam Operating System Concepts, pipe merupakan salah satu metode komunikasi antarproses paling mendasar dan penting dalam desain sistem operasi modern. Ia menyediakan dasar untuk memahami bentuk IPC yang lebih kompleks, dan implementasinya sangat erat dengan penggunaan fork() dalam sistem UNIX.
 
-Penggunaan wait() pada parent memastikan bahwa parent tidak keluar sebelum child menyelesaikan prosesnya.
-Konsep ini dijelaskan dalam Operating System Concepts bahwa pipe merupakan salah satu bentuk komunikasi antar proses yang efisien, terutama dalam skenario parent-child (Silberschatz et al., 2018). Sementara itu, detail teknis seperti struktur fd[], blocking behavior, dan cara penggunaan disajikan secara teknis dalam dokumentasi man7.org dan tutorial praktikal seperti di GeeksforGeeks.
+Tutorial praktis dari Scaler Topics juga menjelaskan bahwa penggunaan fork() bersama pipe menjadi teknik fundamental dalam banyak aplikasi sistem, dan sangat penting dipahami saat membangun proses konkuren di C/C++ dalam lingkungan Linux (Scaler, n.d.).
 
 **Solusi**
 
@@ -219,5 +222,7 @@ https://github.com/user-attachments/assets/4ca86ce6-1f18-4974-a16f-176505909320
 ## Daftar Pustaka
 
 1. Silberschatz, A., Galvin, P. B., & Gagne, G. (2018). Operating System Concepts (10th ed.). Wiley.
-2. GeeksforGeeks. (n.d.). Pipe in C. Retrieved from https://www.geeksforgeeks.org/pipe-system-call/
-3. man7.org. (n.d.). pipe(2) - Linux manual page. Retrieved from https://man7.org/linux/man-pages/man2/pipe.2.html
+2. Scaler. (n.d.). fork() in C. Retrieved from https://www.scaler.com/topics/c-fork/ 
+3. Venkataraman, A., & Jagadeesha, K. (≈2013). Evaluation of Inter‑Process Communication Mechanisms. University of Wisconsin–Madison.
+4. Krishnaveni, S., & Durairaj, D. (2016). Comparing and Evaluating the Performance of Inter Process Communication Models in Linux Environment. International Journal of Trend in Research and Development (IJTRD), 3(6), 2456–6470.
+
